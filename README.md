@@ -2,8 +2,9 @@
 
 > ⚠️ **Simulación académica.** Esta app calcula una boleta de pago **de ejemplo** con las reglas
 > simplificadas de la actividad *Actividad_Grupo_B* ("Boleta de pago: del sueldo al neto").
-> Las tasas usadas —en especial **AFP Ejemplo**— son valores de prueba del laboratorio.
-> Verifica los parámetros en las fuentes oficiales antes de usarlos en una boleta laboral real.
+> Las tasas de AFP son las publicadas por la SBS para el devengue de octubre de 2026 y la RMV es
+> la del D.S. 015-2026-TR. Estos valores cambian con el tiempo: verifícalos antes de usarlos en una
+> boleta laboral real.
 
 Kipu Pay es una app iOS de **una sola pantalla**: arriba el formulario con los datos del mes y,
 al pulsar **Calcular**, la boleta debajo con sus tres bloques (Remuneraciones, Retenciones y
@@ -12,7 +13,8 @@ descuentos, Aportaciones del empleador) y el **neto a pagar** destacado.
 ## Funcionalidades
 
 - Formulario con validación: sueldo básico, días laborados, hijos (No/Sí), sistema de pensiones (ONP/AFP).
-- Nivel 2: selector de AFP (solo visible con AFP), horas extras al 25% y al 35%, adelantos.
+- Nivel 2: selector de AFP (solo visible con AFP) con las 4 AFP reales en modalidad de comisión
+  por flujo o mixta, horas extras al 25% y al 35%, adelantos.
 - Boleta en tres bloques; los conceptos que no aplican se muestran con S/ 0.00.
 - Importes en soles con formato `es_PE` (`S/ 2,175.00`), alineados a la derecha.
 - Progreso en tres etapas que refleja el estado real: **Datos** (formulario válido),
@@ -43,7 +45,8 @@ Los cálculos usan `Decimal`, nunca `Double`.
 | Horas extras 35% | Valor hora × 1.35 × horas al 35% |
 | Total remuneraciones | Suma de los cuatro conceptos anteriores |
 | ONP | Total remuneraciones × 13% (solo si es ONP) |
-| AFP fondo / comisión / seguro | Total remuneraciones × tasa de la AFP, cada uno redondeado (solo si es AFP) |
+| AFP fondo / comisión | Total remuneraciones × tasa de la AFP, cada uno redondeado (solo si es AFP) |
+| AFP seguro | Mínimo entre el total de remuneraciones y la remuneración máxima asegurable (S/ 12,732.70) × 1.37% |
 | Adelantos | Monto ingresado, se resta tal cual |
 | Total descuentos | Pensión (ONP **o** AFP) + adelantos |
 | Neto a pagar | Total remuneraciones − total descuentos |
@@ -68,17 +71,37 @@ No se calcula renta de 5.ª categoría (es parte del nivel 3, opcional).
 
 | Parámetro | Valor | Fuente | Fecha de consulta |
 |---|---|---|---|
-| RMV | S/ 1,230.00 | D.S. de la RMV, vigente desde el 01/10/2026 (según el enunciado) | 28/10/2026 |
+| RMV | S/ 1,230.00 | D.S. 015-2026-TR, vigente desde el 01/10/2026 | 28/10/2026 |
 | Asignación familiar | 10% de la RMV = S/ 123.00 | Ley 25129 | 28/10/2026 |
 | ONP | 13% | D.L. 19990 | 28/10/2026 |
 | EsSalud | 9% | Ley 26790 | 28/10/2026 |
 | Horas extras | ×1.25 y ×1.35 | Normas de jornada y sobretiempo | 28/10/2026 |
-| AFP Ejemplo | Fondo 10.00%, comisión 1.60%, seguro 1.35% | Valores de prueba del laboratorio (no son tasas de la SBS) | 28/10/2026 |
+| Aporte al fondo AFP | 10% (todas las AFP) | SBS, comisiones y primas del SPP, devengue 10/2026 | 28/10/2026 |
+| Prima de seguro AFP | 1.37% (todas las AFP, Ley 32123) | SBS, devengue 10/2026 | 28/10/2026 |
+| Remuneración máxima asegurable | S/ 12,732.70 (oct–dic 2026) | SBS, devengue 10/2026 | 28/10/2026 |
 
-Los valores y fuentes se tomaron del documento `Actividad_Grupo_B.docx` en la fecha indicada.
-**Pendiente:** contrastarlos con la publicación oficial (El Peruano, SBS) y anotar el enlace exacto.
-Para añadir una AFP real, agrega sus tasas verificadas al diccionario `tasasAFP`; el selector la
-mostrará automáticamente. Si una AFP no tiene tasas, el cálculo se bloquea (nunca se usa 0).
+**Comisión de cada AFP** (SBS, devengue octubre 2026, consultado el 28/10/2026):
+
+| AFP | Comisión por flujo (sobre la remuneración) | Comisión mixta: sobre la remuneración | Comisión mixta: anual sobre el saldo* |
+|---|---:|---:|---:|
+| Habitat | 1.47% | 0.00% | 1.25% |
+| Integra | 1.55% | 0.00% | 0.78% |
+| Prima | 1.60% | 0.00% | 1.25% |
+| Profuturo | 1.69% | 0.00% | 0.68% |
+
+\* La comisión sobre el saldo se cobra del fondo acumulado y **no aparece en la boleta**; por eso, en la
+modalidad mixta, la comisión de la boleta es S/ 0.00. Desde 2013 los nuevos afiliados entran en la
+modalidad mixta; los afiliados más antiguos pueden seguir en flujo. El selector ofrece ambas.
+
+Fuentes: [SBS – Comisiones y primas de seguros](https://www.sbs.gob.pe/app/spp/empleadores/comisiones_spp/paginas/comision_prima.aspx),
+[D.S. 015-2026-TR (LP Derecho)](https://lpderecho.pe/keiko-fujimori-firma-decreto-supremo-aumento-sueldo-minimo/).
+Las tasas de AFP se actualizan cada mes; la remuneración máxima asegurable, cada trimestre.
+
+**AFP Ejemplo** (fondo 10%, comisión 1.60%, seguro 1.35%) se conserva al final del selector solo para
+reproducir los casos 3 y 4 del enunciado, que el docente revisa con esas tasas. No es una AFP real.
+
+Para actualizar las tasas, edita el diccionario `tasasAFP` en `ParametrosLaborales.swift`; el
+selector se actualiza solo. Si una AFP no tiene tasas, el cálculo se bloquea (nunca se usa 0).
 
 ## Requisitos de programación del documento
 
@@ -112,6 +135,7 @@ Kipu Pay/
     └── BoletaResultadoView.swift
 Kipu PayTests/                        Pruebas unitarias (Swift Testing)
 docs/capturas/                        Capturas del simulador
+excel/Kipu_Pay_Boleta.xlsx            Libro de Excel con las fórmulas (control cruzado)
 ```
 
 ## Validaciones
@@ -135,6 +159,8 @@ campos a corregir. Los errores aparecen tras el primer intento de cálculo y se 
 
 ### Casos oficiales (verificados en pruebas unitarias y en el simulador)
 
+Los casos 3 y 4 usan **AFP Ejemplo**, como indica el enunciado (elígela al final del selector de AFP).
+
 | Concepto | Caso 1 | Caso 2 | Caso 3 | Caso 4* |
 |---|---:|---:|---:|---:|
 | Entradas | 2,500 · 30 d · sin hijos · ONP | 1,800 · 27 d · con hijos · ONP | 3,000 · 30 d · con hijos · AFP · 4 h + 4 h · adelanto 200 | 4,200 · 24 d · con hijos · AFP · 2 h + 2 h · adelanto 100 |
@@ -155,7 +181,7 @@ campos a corregir. Los errores aparecen tras el primer intento de cálculo y se 
 
 \* El documento no publica la respuesta del caso 4. Los valores se obtuvieron con un cálculo
 independiente (Python `decimal`, `ROUND_HALF_UP`, mismas reglas) y coinciden con la app.
-**Falta contrastarlos con la hoja de Excel del equipo**, que todavía no forma parte de este repositorio.
+La hoja de Excel (`excel/Kipu_Pay_Boleta.xlsx`) da los mismos valores al centavo.
 
 ### Pruebas adicionales
 
@@ -182,9 +208,29 @@ independiente (Python `decimal`, `ROUND_HALF_UP`, mismas reglas) y coinciden con
 | 19 | Calcular varias veces | Sin duplicar importes | `calculoRepetido` |
 | 20 | Comisión/seguro con > 2 decimales | 19.75296 → 19.75; 16.66656 → 16.67 | `redondeoAFP`, `caso3`, `caso4` |
 | — | AFP sin tasas configuradas | Bloquea el cálculo con mensaje | `afpSinTasas` (clase y ViewModel) |
+| — | Tasas reales SBS cargadas | Fondo 10%, seguro 1.37%, comisión por flujo de cada AFP; mixta 0% | `tasasReales` |
+| — | Caso 3 con AFP Habitat (flujo) | Comisión 47.82, seguro 44.57, neto 2,635.31 | `caso3HabitatFlujo` |
+| — | Caso 3 con AFP Habitat (mixta) | Comisión 0.00, neto 2,683.13 | `caso3HabitatMixta` |
+| — | Sueldo de S/ 20,000 con AFP Prima (flujo) | Seguro con tope: 12,732.70 × 1.37% = 174.44 | `topeSeguro` |
 
-Resultado de la última ejecución: **69 ejecuciones de prueba superadas, 0 fallidas**
+Resultado de la última ejecución: **77 ejecuciones de prueba superadas, 0 fallidas**
 (Xcode 27.1, simulador iPhone 18 Pro, iOS 27.0).
+
+## Hoja de Excel
+
+`excel/Kipu_Pay_Boleta.xlsx` tiene las cuatro hojas que pide el enunciado. Todas las cifras salen de
+fórmulas visibles; no hay valores pegados.
+
+| Hoja | Contenido |
+|---|---|
+| **Parámetros** | RMV, tasas y remuneración máxima asegurable, con fuente y fecha de consulta. Tabla de AFP (SBS, octubre 2026) + AFP Ejemplo; filas libres para agregar otras |
+| **Boleta** | Datos en celdas amarillas (con listas desplegables para hijos, sistema y AFP) y la boleta en tres bloques con el neto. Valida los datos igual que la app |
+| **Casos** | Casos 1–4, variantes para las preguntas de análisis y una columna para el caso propio. Control cruzado: ¿Excel = documento? y ¿Excel = app? |
+| **Explicación** | Cada fórmula en palabras con el ejemplo del caso 3, convenciones de redondeo y las preguntas de análisis con sus cifras |
+
+Usa las mismas reglas que la app: `REDONDEAR` a 2 decimales en cada concepto, valor hora redondeado
+y tope de la remuneración máxima asegurable en el seguro AFP. Evalué las 627 celdas con un motor de
+fórmulas independiente: no hay errores y todos los controles cruzados dan "✓ Coincide".
 
 ## Cómo abrir y ejecutar
 
@@ -215,6 +261,4 @@ los importes son los que produce la app.
 
 ## Pendiente
 
-- Hoja de Excel (Parámetros, Boleta, Casos, Explicación) y contraste al centavo con la app.
 - Respuestas a las 5 preguntas de análisis y caso propio con un sueldo de una oferta real.
-- Verificar los parámetros en las fuentes oficiales y completar los enlaces.
