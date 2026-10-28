@@ -79,10 +79,20 @@ struct BoletaViewModelTests {
         vm.entrada.dias = "30"
         vm.entrada.tieneHijos = true
         vm.entrada.sistemaPensiones = .afp
+        vm.entrada.afp = ParametrosLaborales.afpEjemplo
         vm.entrada.horas25 = "4"
         vm.entrada.horas35 = "4"
         vm.entrada.adelantos = "200"
         return vm
+    }
+
+    @Test("Por defecto se ofrece una AFP real y la de prueba queda al final")
+    func afpsDisponibles() {
+        let vm = BoletaViewModel()
+        #expect(vm.entrada.afp == "AFP Habitat · Flujo")
+        #expect(vm.afpsDisponibles.count == 9)
+        #expect(vm.afpsDisponibles.first == "AFP Habitat · Flujo")
+        #expect(vm.afpsDisponibles.last == ParametrosLaborales.afpEjemplo)
     }
 
     @Test("Antes de calcular no hay boleta ni errores visibles")

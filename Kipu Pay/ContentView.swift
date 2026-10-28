@@ -150,7 +150,7 @@ struct ContentView: View {
 
     private var notaAcademica: some View {
         Label {
-            Text("Simulación académica. Las tasas usadas, incluida AFP Ejemplo, son valores del laboratorio: verifícalas en fuentes oficiales (SBS, El Peruano) antes de usarlas en una boleta laboral real.")
+            Text("Simulación académica. Las tasas AFP son las publicadas por la SBS para octubre 2026 y la RMV es la del D.S. 015-2026-TR; cambian con el tiempo, así que verifícalas antes de usarlas en una boleta laboral real.")
         } icon: {
             Image(systemName: "info.circle")
         }

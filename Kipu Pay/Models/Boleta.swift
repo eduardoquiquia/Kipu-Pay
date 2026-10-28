@@ -119,7 +119,9 @@ final class Boleta {
         onp = esAFP ? 0 : (total * p.tasaONP).redondeadoMoneda()
         afpFondo = tasas.map { (total * $0.fondo).redondeadoMoneda() } ?? 0
         afpComision = tasas.map { (total * $0.comision).redondeadoMoneda() } ?? 0
-        afpSeguro = tasas.map { (total * $0.seguro).redondeadoMoneda() } ?? 0
+        // La prima de seguro solo se aplica hasta la remuneración máxima asegurable.
+        let baseSeguro = min(total, p.remuneracionMaximaAsegurable)
+        afpSeguro = tasas.map { (baseSeguro * $0.seguro).redondeadoMoneda() } ?? 0
         adelantos = datos.adelantos.redondeadoMoneda()
 
         let descuentos = [
@@ -132,7 +134,11 @@ final class Boleta {
                            detalle: tasas.map { $0.comision.formatoPorcentaje } ?? "No aplica",
                            monto: afpComision, tipo: .descuento, aplica: esAFP),
             ConceptoBoleta(id: "afpSeguro", nombre: "AFP seguro",
-                           detalle: tasas.map { $0.seguro.formatoPorcentaje } ?? "No aplica",
+                           detalle: tasas.map { tasa in
+                               total > p.remuneracionMaximaAsegurable
+                                   ? "\(tasa.seguro.formatoPorcentaje) sobre el tope de \(p.remuneracionMaximaAsegurable.formatoSoles)"
+                                   : tasa.seguro.formatoPorcentaje
+                           } ?? "No aplica",
                            monto: afpSeguro, tipo: .descuento, aplica: esAFP),
             ConceptoBoleta(id: "adelantos", nombre: "Adelantos", detalle: "Monto ingresado",
                            monto: adelantos, tipo: .descuento, aplica: adelantos > 0)

@@ -232,6 +232,59 @@ struct ReglasCalculoTests {
         }
     }
 
+    // MARK: Tasas reales (SBS, devengue octubre 2026)
+
+    private func datosReales(afp: String, sueldo: String = "3000", hijos: Bool = true,
+                             h25: Int = 4, h35: Int = 4, adelanto: String = "200") -> DatosTrabajador {
+        DatosTrabajador(sueldoBasico: d(sueldo), diasLaborados: 30, tieneHijos: hijos,
+                        sistemaPensiones: .afp, nombreAFP: afp,
+                        horasExtras25: h25, horasExtras35: h35, adelantos: d(adelanto))
+    }
+
+    @Test("Tasas SBS de comisión por flujo y prima de seguro", arguments: [
+        ("AFP Habitat · Flujo", "0.0147"), ("AFP Integra · Flujo", "0.0155"),
+        ("AFP Prima · Flujo", "0.0160"), ("AFP Profuturo · Flujo", "0.0169")
+    ])
+    func tasasReales(afp: String, comision: String) throws {
+        let tasas = try #require(ParametrosLaborales.tasasAFP[afp])
+        #expect(tasas.fondo == d("0.10"))
+        #expect(tasas.comision == d(comision))
+        #expect(tasas.seguro == d("0.0137"))
+        #expect(ParametrosLaborales.tasasAFP[afp.replacingOccurrences(of: "Flujo", with: "Mixta")]?.comision == 0)
+    }
+
+    @Test("Datos del caso 3 con AFP Habitat por flujo")
+    func caso3HabitatFlujo() throws {
+        let b = try Boleta(datos: datosReales(afp: "AFP Habitat · Flujo"))
+        #expect(b.totalRemuneraciones == d("3253.00"))
+        #expect(b.afpFondo == d("325.30"))
+        #expect(b.afpComision == d("47.82"))           // 3253 × 1.47% = 47.8191
+        #expect(b.afpSeguro == d("44.57"))             // 3253 × 1.37% = 44.5661
+        #expect(b.totalDescuentos == d("617.69"))
+        #expect(b.netoAPagar == d("2635.31"))
+        #expect(b.essalud == d("292.77"))
+    }
+
+    @Test("Comisión mixta: no se descuenta comisión en la boleta")
+    func caso3HabitatMixta() throws {
+        let b = try Boleta(datos: datosReales(afp: "AFP Habitat · Mixta"))
+        #expect(b.afpComision == 0)
+        #expect(b.afpSeguro == d("44.57"))
+        #expect(b.totalDescuentos == d("569.87"))
+        #expect(b.netoAPagar == d("2683.13"))
+    }
+
+    @Test("La prima de seguro se calcula solo hasta la remuneración máxima asegurable")
+    func topeSeguro() throws {
+        let b = try Boleta(datos: datosReales(afp: "AFP Prima · Flujo", sueldo: "20000",
+                                              hijos: false, h25: 0, h35: 0, adelanto: "0"))
+        #expect(b.totalRemuneraciones == d("20000.00"))
+        #expect(b.afpFondo == d("2000.00"))            // el fondo no tiene tope
+        #expect(b.afpComision == d("320.00"))          // la comisión no tiene tope
+        #expect(b.afpSeguro == d("174.44"))            // 12,732.70 × 1.37% = 174.43799
+        #expect(b.netoAPagar == d("17505.56"))
+    }
+
     @Test("Formato de moneda es_PE")
     func formato() {
         // Foundation separa "S/" del importe con un espacio no separable (U+00A0).

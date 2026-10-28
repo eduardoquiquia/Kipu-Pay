@@ -92,9 +92,16 @@ struct FormularioTrabajadorView: View {
                 Text("Fondo \(tasas.fondo.formatoPorcentaje) · Comisión \(tasas.comision.formatoPorcentaje) · Seguro \(tasas.seguro.formatoPorcentaje)")
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(Paleta.textoSecundario)
-                Text("Valores de prueba del laboratorio, no tasas oficiales.")
+                Text(tasas.nota)
                     .font(.caption)
                     .foregroundStyle(Paleta.textoSecundario)
+                    .fixedSize(horizontal: false, vertical: true)
+                if viewModel.entrada.afp != ParametrosLaborales.afpEjemplo {
+                    Text("Tasas SBS, devengue octubre 2026. El seguro se aplica hasta \(ParametrosLaborales.remuneracionMaximaAsegurable.formatoSoles).")
+                        .font(.caption2)
+                        .foregroundStyle(Paleta.textoSecundario)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             if let error = viewModel.error(para: .afp) {
                 MensajeEstado(tipo: .error, texto: error)

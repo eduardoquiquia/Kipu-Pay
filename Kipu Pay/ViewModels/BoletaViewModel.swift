@@ -30,7 +30,7 @@ struct EntradaFormulario: Equatable {
     var dias = ""
     var tieneHijos = false
     var sistemaPensiones: SistemaPensiones = .onp
-    var afp = ParametrosLaborales.afpEjemplo
+    var afp = ParametrosLaborales.afpPorDefecto
     var horas25 = "0"
     var horas35 = "0"
     var adelantos = "0"
@@ -62,7 +62,10 @@ final class BoletaViewModel {
 
     init(tasasAFP: [String: TasasAFP] = ParametrosLaborales.tasasAFP) {
         self.tasasAFP = tasasAFP
-        self.afpsDisponibles = tasasAFP.keys.sorted()
+        // Primero las AFP reales en orden alfabético; la de prueba del laboratorio al final.
+        let ejemplo = ParametrosLaborales.afpEjemplo
+        self.afpsDisponibles = tasasAFP.keys.filter { $0 != ejemplo }.sorted()
+            + (tasasAFP[ejemplo] == nil ? [] : [ejemplo])
     }
 
     var tasasAFPSeleccionada: TasasAFP? { tasasAFP[entrada.afp] }
